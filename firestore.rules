@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Stations collection:
+    // Read: Allowed for all authenticated users to browse stations and routes.
+    // Write: Strictly restricted to prevent arbitrary modification of prices, coordinates, or availability.
+    match /stations/{stationId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only manageable by admin backend / Firebase console
+    }
+
+    // User profiles:
+    // Users can read and write only their own profile document.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deny all other collections by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

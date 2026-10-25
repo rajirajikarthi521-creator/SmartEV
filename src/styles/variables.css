@@ -1,0 +1,60 @@
+:root {
+  /* Brand Color Palette - Specification 5.1 */
+  --primary-green: #0F9D58;
+  --dark-green: #087443;
+  --primary-green-light: rgba(15, 157, 88, 0.1);
+  --primary-green-focus: rgba(15, 157, 88, 0.25);
+
+  --main-background: #F6F8F7;
+  --white-surface: #FFFFFF;
+  --surface-hover: #F8FAF9;
+  
+  --main-text: #202124;
+  --secondary-text: #5F6368;
+  --disabled-text: #9AA0A6;
+  
+  --border-color: #DADCE0;
+  --border-focus: #0F9D58;
+  
+  --error-color: #D93025;
+  --error-bg: #FCE8E6;
+  --warning-color: #F9AB00;
+  --warning-bg: #FEF7E0;
+  --success-color: #188038;
+  --success-bg: #E6F4EA;
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Spacing */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+
+  /* Shadows (Subtle & clean as requested) */
+  --shadow-sm: 0 1px 3px rgba(32, 33, 36, 0.08);
+  --shadow-md: 0 4px 12px rgba(32, 33, 36, 0.08);
+  --shadow-lg: 0 8px 24px rgba(32, 33, 36, 0.12);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 250ms ease-in-out;
+
+  /* Z-indices */
+  --z-map: 1;
+  --z-overlay: 500;
+  --z-dropdown: 1000;
+  --z-modal: 2000;
+  --z-toast: 3000;
+}
