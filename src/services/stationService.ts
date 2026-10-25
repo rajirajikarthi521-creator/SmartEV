@@ -5,6 +5,7 @@ import {
   setDoc,
   getDoc,
   query,
+  Firestore,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { Station } from '../types/station';
@@ -23,14 +24,16 @@ export function isWithinTamilNadu(latitude: number, longitude: number): boolean 
  * Seed all verified Tamil Nadu EV charging stations across all districts into Cloud Firestore
  */
 export async function seedTamilNaduStationsToFirebase(): Promise<{ success: boolean; count: number; error?: string }> {
-  if (!isFirebaseConfigured) {
+  if (!isFirebaseConfigured || !db) {
     return { success: false, count: 0, error: 'Firebase is not configured. Add live credentials in .env' };
   }
+
+  const firestore = db as Firestore;
 
   try {
     let count = 0;
     for (const station of TAMIL_NADU_STATIONS) {
-      const stationRef = doc(db, 'stations', station.id);
+      const stationRef = doc(firestore, 'stations', station.id);
       await setDoc(stationRef, {
         name: station.name,
         district: station.district,
@@ -60,9 +63,10 @@ export async function seedTamilNaduStationsToFirebase(): Promise<{ success: bool
  */
 export async function getStations(): Promise<{ stations: Station[]; fromFirebase: boolean; error?: string }> {
   // If Firebase is configured with real credentials, try loading from Firestore
-  if (isFirebaseConfigured) {
+  if (isFirebaseConfigured && db) {
+    const firestore = db as Firestore;
     try {
-      const stationsCol = collection(db, 'stations');
+      const stationsCol = collection(firestore, 'stations');
       const q = query(stationsCol);
       const snapshot = await getDocs(q);
 
@@ -107,9 +111,10 @@ export async function getStations(): Promise<{ stations: Station[]; fromFirebase
 export async function getStationById(stationId: string): Promise<Station | null> {
   if (!stationId) return null;
 
-  if (isFirebaseConfigured) {
+  if (isFirebaseConfigured && db) {
+    const firestore = db as Firestore;
     try {
-      const docRef = doc(db, 'stations', stationId);
+      const docRef = doc(firestore, 'stations', stationId);
       const snapshot = await getDoc(docRef);
       if (snapshot.exists()) {
         const validated = validateStationData(snapshot.id, snapshot.data());

@@ -10,6 +10,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { UserProfile } from '../types/user';
 
+
 // Local storage key for offline/demo auth testing
 const DEMO_USER_KEY = 'smart_ev_demo_user';
 
@@ -65,6 +66,10 @@ export async function registerUser(
     return { success: true, user: demoProfile };
   }
 
+  if (!auth) {
+    return { success: false, error: 'Firebase is not configured. Please add your Firebase credentials.' };
+  }
+
   try {
     const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
     if (displayName && displayName.trim()) {
@@ -72,14 +77,16 @@ export async function registerUser(
     }
 
     // Create user profile in Firestore
-    try {
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        displayName: displayName.trim() || cred.user.email?.split('@')[0] || 'User',
-        email: cred.user.email,
-        createdAt: serverTimestamp(),
-      });
-    } catch (profileErr) {
-      console.warn('Profile document creation failed (non-blocking):', profileErr);
+    if (db) {
+      try {
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          displayName: displayName.trim() || cred.user.email?.split('@')[0] || 'User',
+          email: cred.user.email,
+          createdAt: serverTimestamp(),
+        });
+      } catch (profileErr) {
+        console.warn('Profile document creation failed (non-blocking):', profileErr);
+      }
     }
 
     return {
@@ -114,6 +121,10 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
     return { success: true, user: demoProfile };
   }
 
+  if (!auth) {
+    return { success: false, error: 'Firebase is not configured. Please add your Firebase credentials.' };
+  }
+
   try {
     const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
     return {
@@ -133,7 +144,7 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
  * Sign out the currently logged in user
  */
 export async function logoutUser(): Promise<void> {
-  if (!isFirebaseConfigured) {
+  if (!isFirebaseConfigured || !auth) {
     localStorage.removeItem(DEMO_USER_KEY);
     return;
   }
@@ -156,6 +167,11 @@ export function onAuthChange(callback: (user: UserProfile | null) => void): () =
       callback(null);
     }
     // Return unsubscribe noop
+    return () => {};
+  }
+
+  if (!auth) {
+    callback(null);
     return () => {};
   }
 

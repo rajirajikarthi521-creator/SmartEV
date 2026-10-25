@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -12,15 +12,32 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
 };
 
+// Check if a real, working Firebase API key has been provided
 export const isFirebaseConfigured =
   Boolean(firebaseConfig.apiKey) &&
+  firebaseConfig.apiKey.length > 10 &&
+  !firebaseConfig.apiKey.includes('Dummy') &&
   !firebaseConfig.apiKey.includes('Placeholder') &&
-  !firebaseConfig.apiKey.includes('Dummy');
+  !firebaseConfig.apiKey.includes('Replace') &&
+  !firebaseConfig.apiKey.includes('Example');
 
-// Initialize Firebase singleton
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Safe Firebase initialization — wrapped in try-catch to prevent blank screen crashes
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+try {
+  if (isFirebaseConfigured) {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+  }
+} catch (err) {
+  console.warn('Firebase initialization skipped (running in demo mode):', err);
+  app = null;
+  auth = null;
+  db = null;
+}
 
+export { auth, db };
 export default app;
