@@ -1,43 +1,25 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-// Firebase client configuration from environment variables
+// Firebase web app configuration — SmartEV Web (smartevstation-23664)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'smartevstation-23664.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'smartevstation-23664',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'smartevstation-23664.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: "AIzaSyCBRNEtB6Q4Hdpdj_ghI-CVXq9E2KMEWVE",
+  authDomain: "smartevstation-23664.firebaseapp.com",
+  projectId: "smartevstation-23664",
+  storageBucket: "smartevstation-23664.firebasestorage.app",
+  messagingSenderId: "529380225373",
+  appId: "1:529380225373:web:d35bddd13d93c0b0cf38b4",
+  measurementId: "G-WFZG0LFTNE",
 };
 
-// Check if a real, working Firebase API key has been provided
-export const isFirebaseConfigured =
-  Boolean(firebaseConfig.apiKey) &&
-  firebaseConfig.apiKey.length > 10 &&
-  !firebaseConfig.apiKey.includes('Dummy') &&
-  !firebaseConfig.apiKey.includes('Placeholder') &&
-  !firebaseConfig.apiKey.includes('Replace') &&
-  !firebaseConfig.apiKey.includes('Example');
+// Always fully configured — keys are hardcoded for this college project
+export const isFirebaseConfigured = true;
 
-// Safe Firebase initialization — wrapped in try-catch to prevent blank screen crashes
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
+// Initialize Firebase singleton
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-try {
-  if (isFirebaseConfigured) {
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-  }
-} catch (err) {
-  console.warn('Firebase initialization skipped (running in demo mode):', err);
-  app = null;
-  auth = null;
-  db = null;
-}
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
-export { auth, db };
 export default app;

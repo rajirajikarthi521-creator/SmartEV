@@ -7,12 +7,8 @@ import {
   User,
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { UserProfile } from '../types/user';
-
-
-// Local storage key for offline/demo auth testing
-const DEMO_USER_KEY = 'smart_ev_demo_user';
 
 export interface AuthResponse {
   success: boolean;
@@ -54,22 +50,6 @@ export async function registerUser(
   password: string,
   displayName: string
 ): Promise<AuthResponse> {
-  if (!isFirebaseConfigured) {
-    // Demo fallback for local development before live API keys are inserted
-    const demoProfile: UserProfile = {
-      uid: 'demo_user_' + Date.now(),
-      email: email.trim(),
-      displayName: displayName.trim() || 'EV Driver',
-      createdAt: Date.now(),
-    };
-    localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demoProfile));
-    return { success: true, user: demoProfile };
-  }
-
-  if (!auth) {
-    return { success: false, error: 'Firebase is not configured. Please add your Firebase credentials.' };
-  }
-
   try {
     const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
     if (displayName && displayName.trim()) {
@@ -77,16 +57,14 @@ export async function registerUser(
     }
 
     // Create user profile in Firestore
-    if (db) {
-      try {
-        await setDoc(doc(db, 'users', cred.user.uid), {
-          displayName: displayName.trim() || cred.user.email?.split('@')[0] || 'User',
-          email: cred.user.email,
-          createdAt: serverTimestamp(),
-        });
-      } catch (profileErr) {
-        console.warn('Profile document creation failed (non-blocking):', profileErr);
-      }
+    try {
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        displayName: displayName.trim() || cred.user.email?.split('@')[0] || 'User',
+        email: cred.user.email,
+        createdAt: serverTimestamp(),
+      });
+    } catch (profileErr) {
+      console.warn('Profile document creation failed (non-blocking):', profileErr);
     }
 
     return {
@@ -106,25 +84,6 @@ export async function registerUser(
  * Sign in an existing user with email and password
  */
 export async function loginUser(email: string, password: string): Promise<AuthResponse> {
-  if (!isFirebaseConfigured) {
-    // Demo fallback
-    const stored = localStorage.getItem(DEMO_USER_KEY);
-    const demoProfile: UserProfile = stored
-      ? JSON.parse(stored)
-      : {
-          uid: 'demo_user_1',
-          email: email.trim(),
-          displayName: email.split('@')[0] || 'EV Driver',
-          createdAt: Date.now(),
-        };
-    localStorage.setItem(DEMO_USER_KEY, JSON.stringify(demoProfile));
-    return { success: true, user: demoProfile };
-  }
-
-  if (!auth) {
-    return { success: false, error: 'Firebase is not configured. Please add your Firebase credentials.' };
-  }
-
   try {
     const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
     return {
@@ -144,10 +103,6 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
  * Sign out the currently logged in user
  */
 export async function logoutUser(): Promise<void> {
-  if (!isFirebaseConfigured || !auth) {
-    localStorage.removeItem(DEMO_USER_KEY);
-    return;
-  }
   await signOut(auth);
 }
 
@@ -155,26 +110,6 @@ export async function logoutUser(): Promise<void> {
  * Subscribe to authentication state changes
  */
 export function onAuthChange(callback: (user: UserProfile | null) => void): () => void {
-  if (!isFirebaseConfigured) {
-    const stored = localStorage.getItem(DEMO_USER_KEY);
-    if (stored) {
-      try {
-        callback(JSON.parse(stored));
-      } catch {
-        callback(null);
-      }
-    } else {
-      callback(null);
-    }
-    // Return unsubscribe noop
-    return () => {};
-  }
-
-  if (!auth) {
-    callback(null);
-    return () => {};
-  }
-
   return onAuthStateChanged(auth, (firebaseUser: User | null) => {
     if (firebaseUser) {
       callback({
